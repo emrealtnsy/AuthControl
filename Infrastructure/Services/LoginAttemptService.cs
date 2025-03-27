@@ -15,7 +15,7 @@ public class LoginAttemptService(IRepository<LoginAttempt> loginAttemptRepositor
         CancellationToken cancellationToken)
     {
         var existingAttempt = await loginAttemptRepository
-            .FindAsync(a => a.Username == userName && a.IpAddress == ipAddress,trackChanges: false, cancellationToken);
+            .FindAsync(a => a.Username == userName && a.IpAddress == ipAddress,trackChanges: true, cancellationToken);
         
         if (existingAttempt is null)
         {
@@ -32,7 +32,7 @@ public class LoginAttemptService(IRepository<LoginAttempt> loginAttemptRepositor
         existingAttempt.AttemptTime = DateTime.UtcNow;
 
         if (existingAttempt.AttemptCount >= _loginSettings.MaxFailedAttempts)
-            existingAttempt.BlockedUntil = DateTime.UtcNow.Add(_loginSettings.BlockTime);
+            existingAttempt.BlockedUntil = DateTime.UtcNow.AddMinutes(_loginSettings.BlockTimeMinutes);
 
         await loginAttemptRepository.SaveChangesAsync(cancellationToken);
     }
@@ -47,14 +47,4 @@ public class LoginAttemptService(IRepository<LoginAttempt> loginAttemptRepositor
             .Where(a => a.Username == userName && a.IpAddress == ipAddress)
             .ExecuteDeleteAsync(cancellationToken);
     
-    public async Task<bool> IsRequestLimitExceededAsync(string ipAddress, CancellationToken cancellationToken)
-    {
-        var cutoffTime = DateTime.UtcNow - TimeSpan.FromMinutes(1);
-
-        var recentRequestCount = await loginAttemptRepository
-            .Queryable()
-            .CountAsync(a => a.IpAddress == ipAddress && a.AttemptTime >= cutoffTime, cancellationToken);
-
-        return recentRequestCount >= _loginSettings.MaxRequestsPerMinute;
-    }
 }

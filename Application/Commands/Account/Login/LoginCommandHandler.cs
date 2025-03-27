@@ -17,12 +17,6 @@ public class LoginCommandHandler(SignInManager<User> signInManager, UserManager<
 
         var user = await userManager.FindByNameAsync(request.UserName);
         var roles = await userManager.GetRolesAsync(user!);
-
-
-        if (await loginAttemptService.IsRequestLimitExceededAsync(ipAddress!, cancellationToken))
-        {
-            return Result<string>.Failure("Too many requests. Please try again in 1 minute.");
-        }
        
         if (await loginAttemptService.IsBlockedAsync(user.UserName, ipAddress!, cancellationToken))
             return Result<string>.

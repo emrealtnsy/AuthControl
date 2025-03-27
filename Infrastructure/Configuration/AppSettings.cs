@@ -23,9 +23,7 @@ public sealed class MailConfig
 public sealed class LoginSettings
 {
     public required int MaxFailedAttempts { get; init; }
-    public required int MaxRequestsPerMinute { get; init; }
-    private double BlockTimeMinutes { get; init; }
-    public TimeSpan BlockTime => TimeSpan.FromMinutes(BlockTimeMinutes);
+    public double BlockTimeMinutes { get; init; }
 }
 
 public sealed record JwtSettings
